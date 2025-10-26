@@ -77,12 +77,11 @@ const showToast = (message, type = 'info', duration = 3000) => {
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
 
-    // 스타일 추가
+    // 스타일 추가 (우측 하단으로 변경)
     toast.style.cssText = `
         position: fixed;
         bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
+        right: 30px;
         background: ${type === 'error' ? '#c92a2a' : type === 'success' ? '#2f9e44' : '#1864ab'};
         color: white;
         padding: 16px 24px;
@@ -90,7 +89,7 @@ const showToast = (message, type = 'info', duration = 3000) => {
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         z-index: 10000;
         font-weight: 600;
-        animation: slideUp 0.3s ease;
+        animation: slideInRight 0.3s ease;
     `;
 
     document.body.appendChild(toast);
@@ -98,14 +97,14 @@ const showToast = (message, type = 'info', duration = 3000) => {
     // 애니메이션 추가
     const style = document.createElement('style');
     style.textContent = `
-        @keyframes slideUp {
+        @keyframes slideInRight {
             from {
                 opacity: 0;
-                transform: translateX(-50%) translateY(20px);
+                transform: translateX(50px);
             }
             to {
                 opacity: 1;
-                transform: translateX(-50%) translateY(0);
+                transform: translateX(0);
             }
         }
     `;
@@ -113,7 +112,7 @@ const showToast = (message, type = 'info', duration = 3000) => {
 
     // 자동 제거
     setTimeout(() => {
-        toast.style.animation = 'slideUp 0.3s ease reverse';
+        toast.style.animation = 'slideInRight 0.3s ease reverse';
         setTimeout(() => toast.remove(), 300);
     }, duration);
 };
@@ -127,7 +126,8 @@ const showLoading = () => {
     overlay.className = 'loading-overlay';
     overlay.innerHTML = `
         <div class="spinner"></div>
-        <p>처리 중...</p>
+        <p class="loading-text">처리 중...</p>
+        <p class="loading-progress" style="font-size: 2em; font-weight: 700; margin-top: 16px;">0%</p>
     `;
 
     overlay.style.cssText = `
@@ -169,6 +169,14 @@ const hideLoading = () => {
     const overlay = document.querySelector('.loading-overlay');
     if (overlay) {
         overlay.remove();
+    }
+};
+
+// 진행률 업데이트
+const updateProgress = (percentage) => {
+    const progressElement = document.querySelector('.loading-progress');
+    if (progressElement) {
+        progressElement.textContent = `${percentage}%`;
     }
 };
 
@@ -400,6 +408,7 @@ window.BaalUtils = {
     showToast,
     showLoading,
     hideLoading,
+    updateProgress,
     downloadFile,
     initDropzone,
     detectBrowserLanguage
