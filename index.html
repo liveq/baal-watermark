@@ -122,20 +122,20 @@
         .position-section {
             display: flex;
             gap: 20px;
-            align-items: flex-start;
+            align-items: stretch;
         }
 
         /* 위치 선택 그리드 */
         .position-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
             gap: 8px;
-            max-width: 200px;
+            width: 200px;
             flex-shrink: 0;
         }
 
         .position-btn {
-            aspect-ratio: 1;
             border: 2px solid var(--border-color);
             background: var(--bg-secondary);
             color: var(--text-primary);
@@ -146,6 +146,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            writing-mode: horizontal-tb;
+            white-space: nowrap;
         }
 
         .position-btn:hover {
