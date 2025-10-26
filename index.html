@@ -162,21 +162,27 @@
         /* 위치 미리보기 */
         .position-preview {
             flex: 1;
-            border: 2px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            background: var(--bg-secondary);
+            background: transparent;
             position: relative;
-            min-height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .position-preview-box {
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 16 / 9;
+            background: #e0e0e0;
+            position: relative;
+            border-radius: 4px;
             overflow: hidden;
         }
 
         .position-preview-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .position-preview-watermark {
@@ -506,10 +512,8 @@
                             <button class="position-btn active" data-position="bottom-right" data-ko="우하" data-en="BR">우하</button>
                         </div>
                         <div class="position-preview" id="positionPreview">
-                            <div id="previewContent" style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                                <div style="width: 300px; height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; position: relative;">
-                                    <span class="position-preview-watermark" id="previewWatermark">WATERMARK</span>
-                                </div>
+                            <div class="position-preview-box" id="previewBox">
+                                <span class="position-preview-watermark" id="previewWatermark">WATERMARK</span>
                             </div>
                         </div>
                     </div>
@@ -637,15 +641,18 @@
         // 미리보기 업데이트 함수
         function updatePositionPreview() {
             const watermark = document.getElementById('previewWatermark');
-            const previewBox = watermark.parentElement;
+            const previewBox = document.getElementById('previewBox');
 
             // 워터마크 텍스트
             const text = document.getElementById('watermarkText').value || 'WATERMARK';
             watermark.textContent = text;
 
-            // 폰트 크기
+            // 폰트 크기 스케일링 (실제 이미지 크기 기준으로 미리보기 크기 조정)
             const fontSize = document.getElementById('fontSize').value;
-            watermark.style.fontSize = fontSize + 'px';
+            const previewWidth = previewBox.offsetWidth;
+            const scaleFactor = previewWidth / 1920; // 1920px을 기준 이미지 크기로 가정
+            const scaledFontSize = fontSize * scaleFactor;
+            watermark.style.fontSize = scaledFontSize + 'px';
 
             // 색상
             const color = document.getElementById('textColor').value;
@@ -662,7 +669,8 @@
             // 그림자
             const shadow = document.getElementById('shadowToggle').checked;
             if (shadow) {
-                watermark.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+                const shadowSize = 2 * scaleFactor;
+                watermark.style.textShadow = `${shadowSize}px ${shadowSize}px ${shadowSize * 2}px rgba(0,0,0,0.5)`;
             } else {
                 watermark.style.textShadow = 'none';
             }
@@ -670,7 +678,7 @@
             // 위치
             const boxWidth = previewBox.offsetWidth;
             const boxHeight = previewBox.offsetHeight;
-            const padding = 20;
+            const padding = 20 * scaleFactor;
 
             watermark.style.left = '';
             watermark.style.right = '';
@@ -799,9 +807,10 @@
             if (files.length > 0) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const previewContent = document.getElementById('previewContent');
-                    previewContent.innerHTML = `
-                        <img src="${e.target.result}" style="max-width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; position: relative;">
+                    const previewBox = document.getElementById('previewBox');
+                    previewBox.style.background = 'transparent';
+                    previewBox.innerHTML = `
+                        <img src="${e.target.result}" class="position-preview-image">
                         <span class="position-preview-watermark" id="previewWatermark">WATERMARK</span>
                     `;
                     updatePositionPreview();
