@@ -118,12 +118,20 @@
             box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
         }
 
+        /* 위치 선택 영역 */
+        .position-section {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
         /* 위치 선택 그리드 */
         .position-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            max-width: 300px;
+            max-width: 200px;
+            flex-shrink: 0;
         }
 
         .position-btn {
@@ -149,6 +157,34 @@
             background: var(--gold-gradient);
             color: white;
             border-color: var(--gold-primary);
+        }
+
+        /* 위치 미리보기 */
+        .position-preview {
+            flex: 1;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            background: var(--bg-secondary);
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .position-preview-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .position-preview-watermark {
+            position: absolute;
+            white-space: nowrap;
+            pointer-events: none;
+            font-weight: bold;
+            transform-origin: center;
         }
 
         /* 슬라이더 */
@@ -457,16 +493,25 @@
 
                 <div class="setting-group">
                     <label class="setting-label" data-ko="위치" data-en="Position">위치</label>
-                    <div class="position-grid">
-                        <button class="position-btn" data-position="top-left" data-ko="좌상" data-en="TL">좌상</button>
-                        <button class="position-btn" data-position="top-center" data-ko="중상" data-en="TC">중상</button>
-                        <button class="position-btn" data-position="top-right" data-ko="우상" data-en="TR">우상</button>
-                        <button class="position-btn" data-position="center-left" data-ko="좌중" data-en="CL">좌중</button>
-                        <button class="position-btn" data-position="center" data-ko="중앙" data-en="C">중앙</button>
-                        <button class="position-btn" data-position="center-right" data-ko="우중" data-en="CR">우중</button>
-                        <button class="position-btn" data-position="bottom-left" data-ko="좌하" data-en="BL">좌하</button>
-                        <button class="position-btn" data-position="bottom-center" data-ko="중하" data-en="BC">중하</button>
-                        <button class="position-btn active" data-position="bottom-right" data-ko="우하" data-en="BR">우하</button>
+                    <div class="position-section">
+                        <div class="position-grid">
+                            <button class="position-btn" data-position="top-left" data-ko="좌상" data-en="TL">좌상</button>
+                            <button class="position-btn" data-position="top-center" data-ko="중상" data-en="TC">중상</button>
+                            <button class="position-btn" data-position="top-right" data-ko="우상" data-en="TR">우상</button>
+                            <button class="position-btn" data-position="center-left" data-ko="좌중" data-en="CL">좌중</button>
+                            <button class="position-btn" data-position="center" data-ko="중앙" data-en="C">중앙</button>
+                            <button class="position-btn" data-position="center-right" data-ko="우중" data-en="CR">우중</button>
+                            <button class="position-btn" data-position="bottom-left" data-ko="좌하" data-en="BL">좌하</button>
+                            <button class="position-btn" data-position="bottom-center" data-ko="중하" data-en="BC">중하</button>
+                            <button class="position-btn active" data-position="bottom-right" data-ko="우하" data-en="BR">우하</button>
+                        </div>
+                        <div class="position-preview" id="positionPreview">
+                            <div id="previewContent" style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                <div style="width: 300px; height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; position: relative;">
+                                    <span class="position-preview-watermark" id="previewWatermark">WATERMARK</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -557,6 +602,11 @@
             document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el => {
                 el.value = '';
             });
+
+            // 초기 미리보기 설정
+            setTimeout(() => {
+                updatePositionPreview();
+            }, 100);
         });
 
         let currentType = 'text';
@@ -584,18 +634,116 @@
             });
         });
 
+        // 미리보기 업데이트 함수
+        function updatePositionPreview() {
+            const watermark = document.getElementById('previewWatermark');
+            const previewBox = watermark.parentElement;
+
+            // 워터마크 텍스트
+            const text = document.getElementById('watermarkText').value || 'WATERMARK';
+            watermark.textContent = text;
+
+            // 폰트 크기
+            const fontSize = document.getElementById('fontSize').value;
+            watermark.style.fontSize = fontSize + 'px';
+
+            // 색상
+            const color = document.getElementById('textColor').value;
+            watermark.style.color = color;
+
+            // 투명도
+            const opacity = document.getElementById('opacity').value / 100;
+            watermark.style.opacity = opacity;
+
+            // 회전
+            const rotation = document.getElementById('rotation').value;
+            watermark.style.transform = `rotate(${rotation}deg)`;
+
+            // 그림자
+            const shadow = document.getElementById('shadowToggle').checked;
+            if (shadow) {
+                watermark.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+            } else {
+                watermark.style.textShadow = 'none';
+            }
+
+            // 위치
+            const boxWidth = previewBox.offsetWidth;
+            const boxHeight = previewBox.offsetHeight;
+            const padding = 20;
+
+            watermark.style.left = '';
+            watermark.style.right = '';
+            watermark.style.top = '';
+            watermark.style.bottom = '';
+            watermark.style.transform += ' translate(-50%, -50%)';
+
+            switch(currentPosition) {
+                case 'top-left':
+                    watermark.style.left = padding + 'px';
+                    watermark.style.top = padding + 'px';
+                    watermark.style.transform = `rotate(${rotation}deg)`;
+                    break;
+                case 'top-center':
+                    watermark.style.left = '50%';
+                    watermark.style.top = padding + 'px';
+                    watermark.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
+                    break;
+                case 'top-right':
+                    watermark.style.right = padding + 'px';
+                    watermark.style.top = padding + 'px';
+                    watermark.style.transform = `rotate(${rotation}deg)`;
+                    break;
+                case 'center-left':
+                    watermark.style.left = padding + 'px';
+                    watermark.style.top = '50%';
+                    watermark.style.transform = `translateY(-50%) rotate(${rotation}deg)`;
+                    break;
+                case 'center':
+                    watermark.style.left = '50%';
+                    watermark.style.top = '50%';
+                    watermark.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+                    break;
+                case 'center-right':
+                    watermark.style.right = padding + 'px';
+                    watermark.style.top = '50%';
+                    watermark.style.transform = `translateY(-50%) rotate(${rotation}deg)`;
+                    break;
+                case 'bottom-left':
+                    watermark.style.left = padding + 'px';
+                    watermark.style.bottom = padding + 'px';
+                    watermark.style.transform = `rotate(${rotation}deg)`;
+                    break;
+                case 'bottom-center':
+                    watermark.style.left = '50%';
+                    watermark.style.bottom = padding + 'px';
+                    watermark.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
+                    break;
+                case 'bottom-right':
+                    watermark.style.right = padding + 'px';
+                    watermark.style.bottom = padding + 'px';
+                    watermark.style.transform = `rotate(${rotation}deg)`;
+                    break;
+            }
+        }
+
         // 위치 선택
         document.querySelectorAll('.position-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 currentPosition = btn.dataset.position;
                 document.querySelectorAll('.position-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                updatePositionPreview();
             });
         });
+
+        // 워터마크 텍스트
+        document.getElementById('watermarkText').addEventListener('input', updatePositionPreview);
 
         // 슬라이더
         document.getElementById('fontSize').addEventListener('input', (e) => {
             document.getElementById('fontSizeValue').textContent = e.target.value + 'px';
+            updatePositionPreview();
         });
 
         document.getElementById('logoScale').addEventListener('input', (e) => {
@@ -604,16 +752,22 @@
 
         document.getElementById('opacity').addEventListener('input', (e) => {
             document.getElementById('opacityValue').textContent = e.target.value + '%';
+            updatePositionPreview();
         });
 
         document.getElementById('rotation').addEventListener('input', (e) => {
             document.getElementById('rotationValue').textContent = e.target.value + '°';
+            updatePositionPreview();
         });
 
         // 색상
         document.getElementById('textColor').addEventListener('input', (e) => {
             document.getElementById('textColorValue').textContent = e.target.value;
+            updatePositionPreview();
         });
+
+        // 그림자 토글
+        document.getElementById('shadowToggle').addEventListener('change', updatePositionPreview);
 
         // 로고 업로드
         document.getElementById('logoInput').addEventListener('change', async (e) => {
@@ -640,6 +794,20 @@
             document.getElementById('fileList').style.display = 'block';
             document.getElementById('processSection').style.display = 'block';
             renderFileList();
+
+            // 첫 번째 이미지를 미리보기에 표시
+            if (files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const previewContent = document.getElementById('previewContent');
+                    previewContent.innerHTML = `
+                        <img src="${e.target.result}" style="max-width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; position: relative;">
+                        <span class="position-preview-watermark" id="previewWatermark">WATERMARK</span>
+                    `;
+                    updatePositionPreview();
+                };
+                reader.readAsDataURL(files[0]);
+            }
         }
 
         function renderFileList() {
