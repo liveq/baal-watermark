@@ -540,7 +540,16 @@
     <!-- 공통 스크립트 -->
     <script src="_common/common.js"></script>
     <script>
-        // 페이지 로드 시 스크롤 맨 위로 & 입력값 초기화
+        // 강제로 스크롤 맨 위로
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+
+        window.addEventListener('load', () => {
+            window.scrollTo(0, 0);
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             window.scrollTo(0, 0);
 
