@@ -396,22 +396,15 @@
         </header>
 
         <main>
-            <!-- 1️⃣ 워터마크 타입 선택 -->
+            <!-- 🏷️ 워터마크 타입 & 설정 -->
             <div class="settings-section">
                 <label class="setting-label">
-                    <span data-ko="1️⃣ 워터마크 타입" data-en="1️⃣ Watermark Type">1️⃣ 워터마크 타입</span>
+                    <span data-ko="🏷️ 워터마크 타입 & 설정" data-en="🏷️ Watermark Type & Settings">🏷️ 워터마크 타입 & 설정</span>
                 </label>
                 <div class="type-tabs">
                     <button class="type-tab active" data-type="text" data-ko="📝 텍스트" data-en="📝 Text">📝 텍스트</button>
                     <button class="type-tab" data-type="image" data-ko="🖼️ 이미지/로고" data-en="🖼️ Image/Logo">🖼️ 이미지/로고</button>
                 </div>
-            </div>
-
-            <!-- 2️⃣ 워터마크 설정 -->
-            <div class="settings-section">
-                <label class="setting-label">
-                    <span data-ko="2️⃣ 워터마크 설정" data-en="2️⃣ Watermark Settings">2️⃣ 워터마크 설정</span>
-                </label>
 
                 <!-- 텍스트 워터마크 설정 -->
                 <div id="textSettings">
@@ -493,10 +486,10 @@
                 </div>
             </div>
 
-            <!-- 3️⃣ 이미지 업로드 -->
+            <!-- 📤 이미지 업로드 -->
             <div class="dropzone" id="dropzone">
                 <p>
-                    <span data-ko="3️⃣ 이미지를 드래그하거나 클릭하여 업로드 (최대 20개)" data-en="3️⃣ Drag & drop images or click to upload (Max 20)">3️⃣ 이미지를 드래그하거나 클릭하여 업로드 (최대 20개)</span>
+                    <span data-ko="📤 이미지를 드래그하거나 클릭하여 업로드 (최대 20개)" data-en="📤 Drag & drop images or click to upload (Max 20)">📤 이미지를 드래그하거나 클릭하여 업로드 (최대 20개)</span>
                 </p>
                 <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
             </div>
@@ -508,10 +501,16 @@
                 <button class="btn-process" id="processBtn" data-ko="워터마크 적용" data-en="Apply Watermark">워터마크 적용</button>
             </div>
 
-            <!-- 4️⃣ 미리보기 -->
+            <!-- 🖼️ 미리보기 -->
             <div class="preview-container">
                 <p class="preview-placeholder" id="placeholder" data-ko="이미지를 업로드하고 워터마크를 적용하세요" data-en="Upload images and apply watermark">이미지를 업로드하고 워터마크를 적용하세요</p>
                 <canvas id="previewCanvas" style="display: none;"></canvas>
+            </div>
+
+            <!-- 썸네일 팔레트 -->
+            <div id="thumbnailPalette" style="display: none; margin-top: 15px; background: var(--bg-accent); border: 2px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 20px;">
+                <label class="setting-label" data-ko="전체 처리된 이미지" data-en="All Processed Images">전체 처리된 이미지</label>
+                <div id="thumbnailGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin-top: 12px;"></div>
             </div>
 
             <!-- 다운로드 버튼 -->
@@ -541,6 +540,9 @@
     <!-- 공통 스크립트 -->
     <script src="_common/common.js"></script>
     <script>
+        // 페이지 로드 시 스크롤 맨 위로
+        window.scrollTo(0, 0);
+
         let currentType = 'text';
         let currentPosition = 'bottom-right';
         let files = [];
@@ -672,6 +674,7 @@
 
             if (processedFiles.length > 0) {
                 showPreview(processedFiles[0]);
+                renderThumbnails();
                 document.getElementById('downloadButtons').style.display = 'flex';
                 window.BaalUtils.showToast('모든 이미지 처리 완료!', 'success', 5000);
             }
@@ -791,6 +794,30 @@
 
             document.getElementById('placeholder').style.display = 'none';
             canvas.style.display = 'block';
+        }
+
+        function renderThumbnails() {
+            if (processedFiles.length === 0) return;
+
+            const palette = document.getElementById('thumbnailPalette');
+            const grid = document.getElementById('thumbnailGrid');
+
+            grid.innerHTML = processedFiles.map((result, index) => {
+                const dataUrl = result.canvas.toDataURL('image/jpeg', 0.7);
+                return `
+                    <div style="cursor: pointer; border: 2px solid var(--border-color); border-radius: var(--border-radius-sm); overflow: hidden; transition: transform 0.2s, border-color 0.2s;"
+                         onclick="showPreview(processedFiles[${index}])"
+                         onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='var(--gold-primary)'"
+                         onmouseout="this.style.transform='scale(1)'; this.style.borderColor='var(--border-color)'">
+                        <img src="${dataUrl}" style="width: 100%; height: 120px; object-fit: cover; display: block;" alt="Thumbnail ${index + 1}">
+                        <div style="padding: 6px; background: var(--bg-secondary); font-size: 0.75em; color: var(--text-secondary); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${result.name}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            palette.style.display = 'block';
         }
 
         // ZIP 다운로드
