@@ -195,6 +195,23 @@
             transform-origin: center;
         }
 
+        .position-preview-size {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #999;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .position-preview-size.hidden {
+            display: none;
+        }
+
         /* 슬라이더 */
         .slider-group {
             display: flex;
@@ -515,6 +532,7 @@
                         </div>
                         <div class="position-preview" id="positionPreview">
                             <div class="position-preview-box" id="previewBox">
+                                <div class="position-preview-size" id="previewSize">1920 × 1080 px<br><span style="font-size: 12px; color: #aaa;">(16:9 Full HD)</span></div>
                                 <span class="position-preview-watermark" id="previewWatermark">WATERMARK</span>
                             </div>
                         </div>
@@ -810,6 +828,13 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const previewBox = document.getElementById('previewBox');
+                    const previewSize = document.getElementById('previewSize');
+
+                    // 사이즈 표시 숨기기
+                    if (previewSize) {
+                        previewSize.classList.add('hidden');
+                    }
+
                     previewBox.style.background = 'transparent';
                     previewBox.innerHTML = `
                         <img src="${e.target.result}" class="position-preview-image">
