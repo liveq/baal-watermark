@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="무료 워터마크 추가 도구. 이미지에 텍스트/로고 워터마크를 추가하세요. 위치, 투명도, 회전 조절 가능.">
+    <meta name="keywords" content="워터마크 추가, 이미지 워터마크, 로고 삽입, 저작권 보호, 사진 워터마크, 무료 워터마크, 워터마크 만들기">
+    <meta name="author" content="BAAL">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://watermark.baal.co.kr/">
+    <meta property="og:title" content="워터마크 추가 - 무료 온라인 도구">
+    <meta property="og:description" content="이미지에 텍스트/로고 워터마크를 무료로 추가하세요. 투명도/위치/회전 조절.">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://watermark.baal.co.kr/">
+    <meta property="twitter:title" content="워터마크 추가 - 무료 온라인 도구">
+    <meta property="twitter:description" content="이미지에 텍스트/로고 워터마크를 무료로 추가하세요.">
+
+    <title>워터마크 추가 - BAAL</title>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2886185075996969"
+     crossorigin="anonymous"></script>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
+
+    <!-- JSZip (ZIP 다운로드용) -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <!-- 공통 스타일 -->
+    <link rel="stylesheet" href="_common/common.css">
+    <style>
+        /* 워터마크 타입 선택 */
+        .type-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .type-tab {
+            flex: 1;
+            max-width: 200px;
+            padding: 16px 32px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-weight: 600;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        .type-tab:hover {
+            border-color: var(--gold-primary);
+            background: var(--bg-accent);
+        }
+
+        .type-tab.active {
+            background: var(--gold-gradient);
+            color: white;
+            border-color: var(--gold-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 설정 섹션 */
+        .settings-section {
+            background: var(--bg-accent);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+        }
+
+        .setting-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .setting-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            font-size: 1em;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        /* 위치 선택 그리드 */
+        .position-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 300px;
+        }
+
+        .position-btn {
+            aspect-ratio: 1;
+            border: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .position-btn:hover {
+            border-color: var(--gold-primary);
+            background: var(--bg-accent);
+        }
+
+        .position-btn.active {
+            background: var(--gold-gradient);
+            color: white;
+            border-color: var(--gold-primary);
+        }
+
+        /* 슬라이더 */
+        .slider-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gold-primary);
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gold-primary);
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            min-width: 60px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: right;
+        }
+
+        /* 색상 픽커 */
+        .color-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            background: var(--bg-secondary);
+        }
+
+        .color-value {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 80px;
+        }
+
+        /* 체크박스 */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* 미리보기 */
+        .preview-container {
+            background: var(--bg-accent);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 30px;
+            margin-bottom: 25px;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #previewCanvas {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .preview-placeholder {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        /* 파일 리스트 */
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .file-status {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        /* 버튼 */
+        .btn-process {
+            padding: 16px 48px;
+            background: var(--gold-gradient);
+            color: white;
+            border: 2px solid var(--gold-primary);
+            border-radius: var(--border-radius-md);
+            font-weight: 700;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .btn-process:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-process:active {
+            transform: translateY(0);
+        }
+
+        .btn-process:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        .btn-download {
+            padding: 14px 32px;
+            background: var(--gold-gradient);
+            color: white;
+            border: 2px solid var(--gold-primary);
+            border-radius: var(--border-radius-md);
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .type-tabs {
+                flex-direction: column;
+            }
+
+            .type-tab {
+                max-width: none;
+            }
+
+            .position-grid {
+                max-width: none;
+            }
+
+            .slider-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .slider-value {
+                width: 100%;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 다크모드 토글 -->
+    <div class="theme-toggle">
+        <button id="themeToggle" aria-label="다크모드 전환">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </div>
+
+    <!-- 언어 전환 & 도구 버튼 -->
+    <div class="lang-toggle">
+        <button id="langToggle" data-lang="ko">
+            <span class="lang-ko">EN</span>
+            <span class="lang-en">KO</span>
+        </button>
+        <button id="toolsToggle">
+            <span class="tooltip" data-ko="더 많은 도구" data-en="More Tools">더 많은 도구</span>
+            🧰
+        </button>
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="container">
+        <header>
+            <h1 data-ko="워터마크 추가" data-en="Add Watermark">워터마크 추가</h1>
+            <p class="subtitle" data-ko="이미지에 텍스트/로고 워터마크를 추가하세요" data-en="Add text/logo watermark to images">이미지에 텍스트/로고 워터마크를 추가하세요</p>
+        </header>
+
+        <main>
+            <!-- 1️⃣ 워터마크 타입 선택 -->
+            <div class="settings-section">
+                <label class="setting-label">
+                    <span data-ko="1️⃣ 워터마크 타입" data-en="1️⃣ Watermark Type">1️⃣ 워터마크 타입</span>
+                </label>
+                <div class="type-tabs">
+                    <button class="type-tab active" data-type="text" data-ko="📝 텍스트" data-en="📝 Text">📝 텍스트</button>
+                    <button class="type-tab" data-type="image" data-ko="🖼️ 이미지/로고" data-en="🖼️ Image/Logo">🖼️ 이미지/로고</button>
+                </div>
+            </div>
+
+            <!-- 2️⃣ 워터마크 설정 -->
+            <div class="settings-section">
+                <label class="setting-label">
+                    <span data-ko="2️⃣ 워터마크 설정" data-en="2️⃣ Watermark Settings">2️⃣ 워터마크 설정</span>
+                </label>
+
+                <!-- 텍스트 워터마크 설정 -->
+                <div id="textSettings">
+                    <div class="setting-group">
+                        <label class="setting-label" for="watermarkText" data-ko="텍스트" data-en="Text">텍스트</label>
+                        <input type="text" id="watermarkText" class="setting-input" placeholder="Copyright © 2025" data-ko-placeholder="Copyright © 2025" data-en-placeholder="Copyright © 2025">
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="setting-label" data-ko="폰트 크기" data-en="Font Size">폰트 크기</label>
+                        <div class="slider-group">
+                            <input type="range" id="fontSize" min="12" max="120" value="48" step="4">
+                            <span class="slider-value" id="fontSizeValue">48px</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="setting-label" data-ko="색상" data-en="Color">색상</label>
+                        <div class="color-group">
+                            <input type="color" id="textColor" value="#ffffff">
+                            <span class="color-value" id="textColorValue">#ffffff</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 이미지 워터마크 설정 -->
+                <div id="imageSettings" style="display: none;">
+                    <div class="setting-group">
+                        <label class="setting-label" data-ko="로고 이미지 업로드" data-en="Upload Logo Image">로고 이미지 업로드</label>
+                        <input type="file" id="logoInput" accept="image/*" class="setting-input">
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="setting-label" data-ko="크기" data-en="Scale">크기</label>
+                        <div class="slider-group">
+                            <input type="range" id="logoScale" min="5" max="50" value="20" step="5">
+                            <span class="slider-value" id="logoScaleValue">20%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 공통 설정 -->
+                <div class="setting-group">
+                    <label class="setting-label" data-ko="투명도" data-en="Opacity">투명도</label>
+                    <div class="slider-group">
+                        <input type="range" id="opacity" min="0" max="100" value="50" step="5">
+                        <span class="slider-value" id="opacityValue">50%</span>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label" data-ko="위치" data-en="Position">위치</label>
+                    <div class="position-grid">
+                        <button class="position-btn" data-position="top-left" data-ko="좌상" data-en="TL">좌상</button>
+                        <button class="position-btn" data-position="top-center" data-ko="중상" data-en="TC">중상</button>
+                        <button class="position-btn" data-position="top-right" data-ko="우상" data-en="TR">우상</button>
+                        <button class="position-btn" data-position="center-left" data-ko="좌중" data-en="CL">좌중</button>
+                        <button class="position-btn" data-position="center" data-ko="중앙" data-en="C">중앙</button>
+                        <button class="position-btn" data-position="center-right" data-ko="우중" data-en="CR">우중</button>
+                        <button class="position-btn" data-position="bottom-left" data-ko="좌하" data-en="BL">좌하</button>
+                        <button class="position-btn" data-position="bottom-center" data-ko="중하" data-en="BC">중하</button>
+                        <button class="position-btn active" data-position="bottom-right" data-ko="우하" data-en="BR">우하</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label" data-ko="회전" data-en="Rotation">회전</label>
+                    <div class="slider-group">
+                        <input type="range" id="rotation" min="-180" max="180" value="0" step="15">
+                        <span class="slider-value" id="rotationValue">0°</span>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="shadowToggle">
+                        <span data-ko="그림자 효과" data-en="Shadow Effect">그림자 효과</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 3️⃣ 이미지 업로드 -->
+            <div class="dropzone" id="dropzone">
+                <p>
+                    <span data-ko="3️⃣ 이미지를 드래그하거나 클릭하여 업로드 (최대 20개)" data-en="3️⃣ Drag & drop images or click to upload (Max 20)">3️⃣ 이미지를 드래그하거나 클릭하여 업로드 (최대 20개)</span>
+                </p>
+                <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
+            </div>
+
+            <div class="file-list" id="fileList" style="display: none;"></div>
+
+            <!-- 처리 버튼 -->
+            <div style="margin: 30px 0; text-align: center;" id="processSection" style="display: none;">
+                <button class="btn-process" id="processBtn" data-ko="워터마크 적용" data-en="Apply Watermark">워터마크 적용</button>
+            </div>
+
+            <!-- 4️⃣ 미리보기 -->
+            <div class="preview-container">
+                <p class="preview-placeholder" id="placeholder" data-ko="이미지를 업로드하고 워터마크를 적용하세요" data-en="Upload images and apply watermark">이미지를 업로드하고 워터마크를 적용하세요</p>
+                <canvas id="previewCanvas" style="display: none;"></canvas>
+            </div>
+
+            <!-- 다운로드 버튼 -->
+            <div class="download-buttons" id="downloadButtons" style="display: none;">
+                <button class="btn-download" id="downloadAllBtn" data-ko="전체 ZIP 다운로드" data-en="Download All as ZIP">전체 ZIP 다운로드</button>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p class="footer-brand">
+                    Made by <a href="https://baal.co.kr" target="_blank">BAAL</a>
+                </p>
+                <p class="footer-contact">
+                    <a href="mailto:baal.contract@gmail.com">baal.contract@gmail.com</a>
+                </p>
+                <p class="footer-links">
+                    <a href="https://baal.co.kr/privacy" target="_blank" data-ko="개인정보처리방침" data-en="Privacy Policy">개인정보처리방침</a>
+                    <span class="separator">|</span>
+                    <a href="https://baal.co.kr/terms" target="_blank" data-ko="이용약관" data-en="Terms of Service">이용약관</a>
+                </p>
+                <p class="footer-copyright">&copy; 2025 BAAL. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 공통 스크립트 -->
+    <script src="_common/common.js"></script>
+    <script>
+        let currentType = 'text';
+        let currentPosition = 'bottom-right';
+        let files = [];
+        let processedFiles = [];
+        let logoImage = null;
+
+        // 타입 선택
+        document.querySelectorAll('.type-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                currentType = tab.dataset.type;
+
+                document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // 설정 표시/숨김
+                if (currentType === 'text') {
+                    document.getElementById('textSettings').style.display = 'block';
+                    document.getElementById('imageSettings').style.display = 'none';
+                } else {
+                    document.getElementById('textSettings').style.display = 'none';
+                    document.getElementById('imageSettings').style.display = 'block';
+                }
+            });
+        });
+
+        // 위치 선택
+        document.querySelectorAll('.position-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentPosition = btn.dataset.position;
+                document.querySelectorAll('.position-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // 슬라이더
+        document.getElementById('fontSize').addEventListener('input', (e) => {
+            document.getElementById('fontSizeValue').textContent = e.target.value + 'px';
+        });
+
+        document.getElementById('logoScale').addEventListener('input', (e) => {
+            document.getElementById('logoScaleValue').textContent = e.target.value + '%';
+        });
+
+        document.getElementById('opacity').addEventListener('input', (e) => {
+            document.getElementById('opacityValue').textContent = e.target.value + '%';
+        });
+
+        document.getElementById('rotation').addEventListener('input', (e) => {
+            document.getElementById('rotationValue').textContent = e.target.value + '°';
+        });
+
+        // 색상
+        document.getElementById('textColor').addEventListener('input', (e) => {
+            document.getElementById('textColorValue').textContent = e.target.value;
+        });
+
+        // 로고 업로드
+        document.getElementById('logoInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                logoImage = new Image();
+                logoImage.src = URL.createObjectURL(file);
+                await logoImage.decode();
+                window.BaalUtils.showToast('로고 이미지가 로드되었습니다.', 'success', 5000);
+            }
+        });
+
+        // 파일 업로드
+        window.BaalUtils.initDropzone('dropzone', 'fileInput', handleFiles, {
+            accept: 'image/*',
+            maxFiles: 20,
+            maxSize: 10 * 1024 * 1024
+        });
+
+        function handleFiles(fileArray) {
+            files = fileArray;
+            processedFiles = [];
+
+            document.getElementById('fileList').style.display = 'block';
+            document.getElementById('processSection').style.display = 'block';
+            renderFileList();
+        }
+
+        function renderFileList() {
+            const container = document.getElementById('fileList');
+            container.innerHTML = files.map((file, index) => `
+                <div class="file-item" id="file-${index}">
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-status" id="status-${index}">대기 중</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 워터마크 처리
+        document.getElementById('processBtn').addEventListener('click', async () => {
+            if (currentType === 'image' && !logoImage) {
+                window.BaalUtils.showToast('로고 이미지를 먼저 업로드하세요.', 'error', 5000);
+                return;
+            }
+
+            if (currentType === 'text' && !document.getElementById('watermarkText').value.trim()) {
+                window.BaalUtils.showToast('워터마크 텍스트를 입력하세요.', 'error', 5000);
+                return;
+            }
+
+            const btn = document.getElementById('processBtn');
+            btn.disabled = true;
+
+            window.BaalUtils.showLoading();
+            processedFiles = [];
+
+            for (let i = 0; i < files.length; i++) {
+                document.getElementById(`status-${i}`).textContent = '처리 중...';
+
+                try {
+                    const result = await processImage(files[i]);
+                    processedFiles.push(result);
+                    document.getElementById(`status-${i}`).textContent = '완료';
+                } catch (error) {
+                    console.error('Processing error:', error);
+                    document.getElementById(`status-${i}`).textContent = '실패: ' + error.message;
+                }
+            }
+
+            window.BaalUtils.hideLoading();
+            btn.disabled = false;
+
+            if (processedFiles.length > 0) {
+                showPreview(processedFiles[0]);
+                document.getElementById('downloadButtons').style.display = 'flex';
+                window.BaalUtils.showToast('모든 이미지 처리 완료!', 'success', 5000);
+            }
+        });
+
+        async function processImage(file) {
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            await img.decode();
+
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+
+            // 원본 이미지 그리기
+            ctx.drawImage(img, 0, 0);
+
+            // 워터마크 옵션
+            const opacity = parseInt(document.getElementById('opacity').value) / 100;
+            const rotation = parseInt(document.getElementById('rotation').value);
+            const hasShadow = document.getElementById('shadowToggle').checked;
+
+            if (currentType === 'text') {
+                const text = document.getElementById('watermarkText').value;
+                const fontSize = parseInt(document.getElementById('fontSize').value);
+                const color = document.getElementById('textColor').value;
+
+                addTextWatermark(ctx, canvas.width, canvas.height, {
+                    text, fontSize, color, opacity, rotation, hasShadow
+                });
+            } else {
+                const scale = parseInt(document.getElementById('logoScale').value) / 100;
+                addImageWatermark(ctx, canvas.width, canvas.height, logoImage, {
+                    scale, opacity, rotation
+                });
+            }
+
+            const blob = await new Promise(resolve => {
+                canvas.toBlob(resolve, 'image/png');
+            });
+
+            URL.revokeObjectURL(img.src);
+
+            return { name: file.name, blob, canvas };
+        }
+
+        function addTextWatermark(ctx, width, height, options) {
+            const { text, fontSize, color, opacity, rotation, hasShadow } = options;
+
+            ctx.save();
+            ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+            const metrics = ctx.measureText(text);
+            const textWidth = metrics.width;
+
+            const coords = calculatePosition(width, height, textWidth, fontSize);
+
+            ctx.globalAlpha = opacity;
+
+            if (hasShadow) {
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+            }
+
+            ctx.translate(coords.x, coords.y);
+            ctx.rotate(rotation * Math.PI / 180);
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 0, 0);
+
+            ctx.restore();
+        }
+
+        function addImageWatermark(ctx, width, height, logo, options) {
+            const { scale, opacity, rotation } = options;
+
+            const logoWidth = logo.width * scale;
+            const logoHeight = logo.height * scale;
+
+            const coords = calculatePosition(width, height, logoWidth, logoHeight);
+
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.translate(coords.x, coords.y);
+            ctx.rotate(rotation * Math.PI / 180);
+            ctx.drawImage(logo, -logoWidth / 2, -logoHeight / 2, logoWidth, logoHeight);
+            ctx.restore();
+        }
+
+        function calculatePosition(canvasWidth, canvasHeight, itemWidth, itemHeight) {
+            const offset = 20;
+            const positions = {
+                'top-left': { x: offset + itemWidth / 2, y: offset + itemHeight / 2 },
+                'top-center': { x: canvasWidth / 2, y: offset + itemHeight / 2 },
+                'top-right': { x: canvasWidth - offset - itemWidth / 2, y: offset + itemHeight / 2 },
+                'center-left': { x: offset + itemWidth / 2, y: canvasHeight / 2 },
+                'center': { x: canvasWidth / 2, y: canvasHeight / 2 },
+                'center-right': { x: canvasWidth - offset - itemWidth / 2, y: canvasHeight / 2 },
+                'bottom-left': { x: offset + itemWidth / 2, y: canvasHeight - offset - itemHeight / 2 },
+                'bottom-center': { x: canvasWidth / 2, y: canvasHeight - offset - itemHeight / 2 },
+                'bottom-right': { x: canvasWidth - offset - itemWidth / 2, y: canvasHeight - offset - itemHeight / 2 }
+            };
+
+            return positions[currentPosition] || positions['bottom-right'];
+        }
+
+        function showPreview(result) {
+            const canvas = document.getElementById('previewCanvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = result.canvas.width;
+            canvas.height = result.canvas.height;
+            ctx.drawImage(result.canvas, 0, 0);
+
+            document.getElementById('placeholder').style.display = 'none';
+            canvas.style.display = 'block';
+        }
+
+        // ZIP 다운로드
+        document.getElementById('downloadAllBtn').addEventListener('click', async () => {
+            if (processedFiles.length === 0) return;
+
+            window.BaalUtils.showLoading();
+
+            const zip = new JSZip();
+
+            processedFiles.forEach(result => {
+                const nameWithoutExt = result.name.replace(/\.[^/.]+$/, '');
+                zip.file(`${nameWithoutExt}_watermarked.png`, result.blob);
+            });
+
+            const content = await zip.generateAsync({ type: 'blob' });
+            window.BaalUtils.downloadFile(content, 'watermarked_images.zip');
+
+            window.BaalUtils.hideLoading();
+            window.BaalUtils.showToast('ZIP 다운로드 완료!', 'success', 5000);
+        });
+    </script>
+</body>
+</html>
